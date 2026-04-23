@@ -27,5 +27,13 @@ class SessionState(BaseModel):
     researcher_output: Optional[ResearcherOutput] = None
     historical_output: Optional[HistoricalQuestionsOutput] = None
     generated_output: Optional[GeneratedQuestionsOutput] = None
+    
+    # New agent outputs
+    resume_output: Optional[Any] = None # Will be ResumeParserOutput, using Any to avoid circular import if needed, or import above
+    insider_output: Optional[Any] = None
+    roadmap_output: Optional[Any] = None
+    mock_mode: bool = False
+    conversation_history: List[Dict[str, str]] = Field(default_factory=list)
+    
     final_questions: List[Question] = Field(default_factory=list)
     status: str = Field(default="initializing", description="initializing, ready, error")

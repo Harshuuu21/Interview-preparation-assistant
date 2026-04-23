@@ -1,6 +1,7 @@
+import os
 import json
 from models.feedback import Feedback, FeedbackBreakdown
-from agents.llm import get_model
+from groq import Groq
 
 def execute(question: str, user_answer: str, role_context: str, company_context: str, iteration_count: int) -> Feedback:
     prompt = f"""
@@ -38,13 +39,19 @@ def execute(question: str, user_answer: str, role_context: str, company_context:
     }}
     """
 
-    model = get_model(json_mode=True, temperature=0.3)
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     
     max_retries = 2
     for attempt in range(max_retries):
         try:
-            response = model.generate_content(prompt)
-            result_json = json.loads(response.text)
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=2000,
+                temperature=0.7,
+                response_format={"type": "json_object"}
+            )
+            result_json = json.loads(response.choices[0].message.content)
             
             return Feedback(
                 score=result_json.get("score", 0),

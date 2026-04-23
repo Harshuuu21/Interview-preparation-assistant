@@ -12,3 +12,8 @@ opentelemetry-sdk
 pytest
 requests
 groq
+SQLAlchemy
+psycopg2-binary
+asyncpg
+PyMuPDF
+python-multipart

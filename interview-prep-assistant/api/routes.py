@@ -21,6 +21,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from api.routes_extended import extended_router
+app.include_router(extended_router)
+
+
 class StartSessionRequest(BaseModel):
     company: str
     role: str

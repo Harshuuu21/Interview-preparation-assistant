@@ -23,9 +23,38 @@
                 </div>
                 <div class="form-group">
                     <label for="role">Role</label>
-                    <input type="text" id="role" placeholder="e.g., Software Engineer" />
+                    <input type="text" id="role" class="field-input" placeholder="e.g., Software Engineer" />
                 </div>
-                <button id="btn-start" class="btn-primary">Generate Questions</button>
+                
+                <div class="form-group" id="resume-group">
+                  <label class="field-label">RESUME <span class="optional">(optional)</span></label>
+                  <div class="file-drop-zone" id="drop-zone">
+                    <div class="drop-icon">↑</div>
+                    <div class="drop-text">Drop your resume here or <span class="browse-link">browse</span></div>
+                    <div class="drop-hint">.pdf or .txt · max 2MB</div>
+                    <input type="file" id="resume-file" accept=".pdf,.txt" hidden />
+                  </div>
+                  <div class="file-selected" id="file-selected" hidden>
+                    <span class="file-icon">📄</span>
+                    <span id="file-name">resume.pdf</span>
+                    <button class="remove-file" id="remove-file">✕</button>
+                  </div>
+                </div>
+                
+                <div class="parse-status" id="parse-status" hidden>
+                  <span class="spinner"></span>
+                  <span>Analysing resume...</span>
+                </div>
+                
+                <div class="resume-tags" id="resume-tags" hidden>
+                  <span class="tag-label">Detected skills:</span>
+                  <div id="skills-list"></div>
+                </div>
+
+                <div style="margin-top: 1.5rem; position: relative;">
+                    <button id="btn-start" class="btn-primary" style="width: 100%;">Generate Questions</button>
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
                 <p id="loading-msg" class="hidden">Orchestrating AI agents... This may take up to 30 seconds.</p>
                 <p id="error-msg" class="hidden error-text"></p>
             </section>
@@ -63,13 +92,7 @@
                     <div class="feedback-grid">
                         <div class="breakdown-section">
                             <h5>Score Breakdown</h5>
-                            <table class="breakdown-table">
-                                <tr><td>Clarity</td><td id="score-clarity"></td></tr>
-                                <tr><td>Depth</td><td id="score-depth"></td></tr>
-                                <tr><td>Relevance</td><td id="score-relevance"></td></tr>
-                                <tr><td>STAR Format</td><td id="score-star"></td></tr>
-                                <tr><td>Role Fit</td><td id="score-role"></td></tr>
-                            </table>
+                            <div id="breakdown-container"></div>
                         </div>
                         <div class="details-section">
                             <h5>Gaps Identified</h5>

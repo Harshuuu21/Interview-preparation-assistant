@@ -1,9 +1,10 @@
+import os
 import json
 from typing import Dict, Any, List
 from models.session import ResearcherOutput
 from tools.web_search import perform_search
 from tools.cache import get_cache, set_cache
-from agents.llm import get_model
+from groq import Groq
 
 def execute(company: str, role: str) -> ResearcherOutput:
     cache_key = f"researcher:{company.lower().replace(' ', '_')}:{role.lower().replace(' ', '_')}"
@@ -41,16 +42,22 @@ def execute(company: str, role: str) -> ResearcherOutput:
     {search_context}
     """
 
-    model = get_model(json_mode=True, temperature=0.2)
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     try:
-        response = model.generate_content(prompt)
-        result_json = json.loads(response.text)
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1500,
+            temperature=0.7,
+            response_format={"type": "json_object"}
+        )
+        result_json = json.loads(response.choices[0].message.content)
         output = ResearcherOutput(
             culture=result_json.get("culture", []),
             recentNews=result_json.get("recentNews", []),
             roleExpectations=result_json.get("roleExpectations", [])
         )
-        set_cache(cache_key, output.model_dump(), 6 * 3600) # 6 hours TTL
+        set_cache(cache_key, output.model_dump(), ttl_seconds=6 * 3600) # 6 hours TTL
         return output
     except Exception as e:
         print(f"Researcher LLM error: {e}")

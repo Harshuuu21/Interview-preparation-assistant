@@ -1,3 +1,4 @@
+import os
 import json
 from typing import Dict, Any, List
 from models.session import HistoricalQuestionsOutput
@@ -5,7 +6,7 @@ from models.question import Question
 from tools.web_search import perform_search
 from tools.cache import get_cache, set_cache
 from tools.deduplicator import deduplicate_questions
-from agents.llm import get_model
+from groq import Groq
 import datetime
 
 def execute(company: str, role: str) -> HistoricalQuestionsOutput:
@@ -33,10 +34,16 @@ def execute(company: str, role: str) -> HistoricalQuestionsOutput:
     {json.dumps(search_q)}
     """
 
-    model = get_model(json_mode=True, temperature=0.2)
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     try:
-        response = model.generate_content(prompt)
-        result_json = json.loads(response.text)
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1500,
+            temperature=0.7,
+            response_format={"type": "json_object"}
+        )
+        result_json = json.loads(response.choices[0].message.content)
         
         raw_behavioural = [Question(**q) for q in result_json.get("behavioural", [])]
         raw_technical = [Question(**q) for q in result_json.get("technical", [])]
@@ -58,7 +65,7 @@ def execute(company: str, role: str) -> HistoricalQuestionsOutput:
             coding=dedup_c,
             source=result_json.get("source", ["Web Search Fallback"])
         )
-        set_cache(cache_key, output.model_dump(), 24 * 3600) # 24 hours TTL
+        set_cache(cache_key, output.model_dump(), ttl_seconds=24 * 3600) # 24 hours TTL
         return output
     except Exception as e:
         print(f"Historical Fetcher LLM error: {e}")

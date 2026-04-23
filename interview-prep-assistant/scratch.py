@@ -1,4 +1,4 @@
-from agents import researcher
-output = researcher.execute("google", "frontend developer")
-print(output.model_dump())
+from models.database import init_db
+init_db()
+print("DB initialized")
 

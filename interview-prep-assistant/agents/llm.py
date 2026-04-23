@@ -1,5 +1,4 @@
 import os
-import google.generativeai as genai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -7,7 +6,8 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-if GEMINI_API_KEY:
+if GEMINI_API_KEY and not GROQ_API_KEY:
+    import google.generativeai as genai
     genai.configure(api_key=GEMINI_API_KEY)
 
 class GroqWrapper:
@@ -37,6 +37,7 @@ def get_model(model_name: str = "gemini-2.0-flash", temperature: float = 0.7, js
         return GroqWrapper(model_name="llama-3.1-8b-instant", temperature=temperature, json_mode=json_mode)
         
     # Otherwise use Gemini
+    import google.generativeai as genai
     generation_config = genai.types.GenerationConfig(
         temperature=temperature,
     )
