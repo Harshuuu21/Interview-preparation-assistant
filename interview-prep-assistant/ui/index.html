@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Prep Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Interview Prep Assistant</h1>
+        </header>
+        
+        <main>
+            <!-- View 1: Input Form -->
+            <section id="view-input" class="view active">
+                <h2>Start a Session</h2>
+                <div class="form-group">
+                    <label for="company">Company</label>
+                    <input type="text" id="company" placeholder="e.g., Google" />
+                </div>
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <input type="text" id="role" placeholder="e.g., Software Engineer" />
+                </div>
+                <button id="btn-start" class="btn-primary">Generate Questions</button>
+                <p id="loading-msg" class="hidden">Orchestrating AI agents... This may take up to 30 seconds.</p>
+                <p id="error-msg" class="hidden error-text"></p>
+            </section>
+
+            <!-- View 2: Question List -->
+            <section id="view-list" class="view hidden">
+                <h2>Your Question Set</h2>
+                <p class="subtitle" id="session-info"></p>
+                <div id="questions-container"></div>
+                <button id="btn-summary" class="btn-secondary" style="margin-top: 2rem;">End Session & View Summary</button>
+            </section>
+
+            <!-- View 3: Answer + Feedback Panel -->
+            <section id="view-answer" class="view hidden">
+                <button id="btn-back" class="btn-text">&larr; Back to Questions</button>
+                <div class="card">
+                    <h3 id="current-question-text"></h3>
+                    <p class="category-tag" id="current-question-meta"></p>
+                </div>
+                
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label for="user-answer">Your Answer</label>
+                    <textarea id="user-answer" rows="6" placeholder="Type your answer here..."></textarea>
+                </div>
+                <button id="btn-submit-answer" class="btn-primary">Evaluate Answer</button>
+                <p id="eval-loading" class="hidden">Judge agent is evaluating your answer...</p>
+
+                <div id="feedback-panel" class="hidden feedback-card">
+                    <h4>Evaluation Feedback</h4>
+                    <div class="score-display">
+                        <span id="final-score" class="score-number"></span>
+                        <span class="score-max"> / 10</span>
+                    </div>
+                    
+                    <div class="feedback-grid">
+                        <div class="breakdown-section">
+                            <h5>Score Breakdown</h5>
+                            <table class="breakdown-table">
+                                <tr><td>Clarity</td><td id="score-clarity"></td></tr>
+                                <tr><td>Depth</td><td id="score-depth"></td></tr>
+                                <tr><td>Relevance</td><td id="score-relevance"></td></tr>
+                                <tr><td>STAR Format</td><td id="score-star"></td></tr>
+                                <tr><td>Role Fit</td><td id="score-role"></td></tr>
+                            </table>
+                        </div>
+                        <div class="details-section">
+                            <h5>Gaps Identified</h5>
+                            <ul id="feedback-gaps"></ul>
+                            
+                            <h5>Actionable Tips</h5>
+                            <ul id="feedback-tips"></ul>
+                        </div>
+                    </div>
+                    
+                    <div class="improved-answer-section">
+                        <h5>Improved Answer Example</h5>
+                        <p id="feedback-improved"></p>
+                    </div>
+
+                    <div id="refinement-prompt" class="hidden prompt-box">
+                        <p><strong>Score below 7:</strong> Please refine your answer above based on this feedback and try again.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View 4: Session Summary -->
+            <section id="view-summary" class="view hidden">
+                <h2>Session Summary</h2>
+                <div id="summary-content"></div>
+                <button id="btn-restart" class="btn-primary" style="margin-top: 2rem;">Start New Session</button>
+            </section>
+        </main>
+    </div>
+    <script src="/static/app.js"></script>
+</body>
+</html>

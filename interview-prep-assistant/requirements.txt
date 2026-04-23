@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+google-generativeai
+redis
+celery
+thefuzz
+duckduckgo-search
+python-dotenv
+opentelemetry-api
+opentelemetry-sdk
+pytest
+requests
+groq
