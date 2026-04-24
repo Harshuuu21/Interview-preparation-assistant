@@ -99,16 +99,89 @@ def generate_question_set(
 
 
 def run_resume_review(resume_text: str, role: str, company: str) -> dict:
-    """Run the resume parser/reviewer directly. Returns the review dict."""
-    inp = ResumeParserInput(
-        resume_text=resume_text,
-        resume_path="",
-        role=role,
-        company=company,
-        trace_id="streamlit",
-    )
-    output = run_resume_parser(inp)
-    return output.model_dump()
+    """Run a comprehensive resume review using the LLM. Returns a rich review dict
+    with overall_score, ats_score, verdict, strengths, improvements, etc."""
+    import os
+    import json
+    import hashlib
+    from tools.cache import get_cache, set_cache
+
+    cache_key = "resume_review:" + hashlib.md5(
+        (resume_text + role + company).encode()
+    ).hexdigest()
+    cached = get_cache(cache_key)
+    if cached:
+        return cached
+
+    prompt = f"""You are an expert resume reviewer and career coach.
+Analyze the following resume for a **{role}** position at **{company}**.
+
+Resume Text:
+{resume_text}
+
+Return ONLY a valid JSON object with this exact schema:
+{{
+    "overall_score": <int 0-100>,
+    "overall_grade": "<string, e.g. 'Strong Match', 'Good Match', 'Needs Work'>",
+    "ats_score": <int 0-100, how well this resume would pass ATS systems>,
+    "keyword_match_score": <int 0-100, how many relevant keywords for the role are present>,
+    "verdict": "<2-3 sentence professional summary of the resume's fit for this role>",
+    "score_breakdown": {{
+        "experience": {{"label": "Experience", "score": <int 0-25>, "max": 25}},
+        "skills": {{"label": "Skills Match", "score": <int 0-25>, "max": 25}},
+        "education": {{"label": "Education", "score": <int 0-25>, "max": 25}},
+        "presentation": {{"label": "Presentation", "score": <int 0-25>, "max": 25}}
+    }},
+    "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
+    "improvements": [
+        {{"section": "<resume section>", "priority": "<high|medium|low>", "issue": "<what's wrong>", "suggestion": "<how to fix>"}},
+        {{"section": "<resume section>", "priority": "<high|medium|low>", "issue": "<what's wrong>", "suggestion": "<how to fix>"}}
+    ],
+    "missing_for_role": ["<missing skill/keyword 1>", "<missing skill/keyword 2>"]
+}}
+"""
+
+    from groq import Groq
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=2000,
+            temperature=0.5,
+            response_format={"type": "json_object"},
+        )
+        review = json.loads(response.choices[0].message.content)
+
+        # Ensure required keys exist with defaults
+        review.setdefault("overall_score", 0)
+        review.setdefault("overall_grade", "Unknown")
+        review.setdefault("ats_score", 0)
+        review.setdefault("keyword_match_score", 0)
+        review.setdefault("verdict", "")
+        review.setdefault("score_breakdown", {})
+        review.setdefault("strengths", [])
+        review.setdefault("improvements", [])
+        review.setdefault("missing_for_role", [])
+
+        set_cache(cache_key, review, ttl_seconds=43200)
+        return review
+
+    except Exception as e:
+        print(f"Resume review LLM error: {e}")
+        # Return a minimal valid structure so the UI doesn't crash
+        return {
+            "overall_score": 0,
+            "overall_grade": "Error",
+            "ats_score": 0,
+            "keyword_match_score": 0,
+            "verdict": f"Resume review could not be completed: {e}",
+            "score_breakdown": {},
+            "strengths": [],
+            "improvements": [],
+            "missing_for_role": [],
+        }
 
 
 def _run_insider_safe(company: str, role: str):
