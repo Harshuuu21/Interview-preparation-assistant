@@ -2,6 +2,7 @@ import httpx
 import os
 import asyncio
 
+
 async def web_search(query: str, num_results: int = 5) -> list[dict]:
     """Search the web using Serper API."""
     api_key = os.getenv("SERPER_API_KEY")
@@ -22,12 +23,20 @@ async def web_search(query: str, num_results: int = 5) -> list[dict]:
             })
         return results
 
+
 def perform_search(query: str, max_results: int = 5) -> list[dict]:
-    """Synchronous wrapper for web_search since our celery tasks are synchronous."""
-    # Run the async web_search synchronously
+    """Synchronous wrapper for web_search. Compatible with Streamlit's event loop."""
     try:
-        loop = asyncio.get_event_loop()
+        # If there's already a running event loop (e.g. Streamlit), use a new thread
+        loop = asyncio.get_running_loop()
     except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(web_search(query, max_results))
+        loop = None
+
+    if loop and loop.is_running():
+        # We're inside an existing event loop (Streamlit) — run in a new thread
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            future = pool.submit(asyncio.run, web_search(query, max_results))
+            return future.result(timeout=15)
+    else:
+        return asyncio.run(web_search(query, max_results))
