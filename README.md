@@ -4,12 +4,6 @@ A multi-agent AI system that helps you prepare for job interviews by researching
 
 ---
 
-## 🚀 Live Demo
-
-> Deployed on Streamlit — [Your Streamlit URL here]
-
----
-
 ## ✨ Features
 
 - 🔍 **Company Research** — Automatically researches company culture, recent news, and role expectations
